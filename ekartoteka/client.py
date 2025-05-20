@@ -18,6 +18,8 @@ class EkartotekaClient:
         self.uchwaly_archiwalne_location = Path("./files/uchwaly/archiwalne")
         self.uchwaly_archiwalne_location.mkdir(parents=True, exist_ok=True)
         self.uchwaly_location = self.active_uchwaly_location
+        self.dokumenty_location = Path("./files/dokumenty")
+        self.dokumenty_location.mkdir(parents=True, exist_ok=True)
 
     def get_user_data(self):
         """Fetch current user data from the API."""
@@ -29,7 +31,7 @@ class EkartotekaClient:
     def get_dane_ksiegowe(self):
         """Extract DaneKsiegowe field from user data."""
         user_data = self.get_user_data()
-        self.id_a_do = user_data.get("DaneKsiegowe", {})
+        self.id_a_do = user_data.get("DaneKsiegowe", {})[0]
         return self.id_a_do
 
     def get_uchwaly(self, page=1, page_size=50, aktywne=1):
@@ -79,3 +81,46 @@ class EkartotekaClient:
                 download_url, f"{location.as_posix()}/{name}", headers=self.headers
             )
         return response.json()
+    
+    def get_document_folders(self, page=1, page_size=50):
+        """Fetch document folders from the API."""
+        url = f"{BASE_URL}/dokumentynieruchomosci/katalogi/"
+        params = {
+            "id_a_do": self.id_a_do,
+            "page_size": page_size,
+            "page": page,
+        }
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_documents_from_folder(self, folder_id, page=1, page_size=50):
+        """Fetch documents from a specific folder."""
+        url = f"{BASE_URL}/dokumentynieruchomosci/dokumenty/"
+        params = {
+            "id_a_do": self.id_a_do,
+            "page_size": page_size,
+            "page": page,
+            "id_rodz": folder_id,
+            "aktywne": True
+        }
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_document_attachments(self, document_id, folder_directory):
+        """Fetch attachments for a specific document."""
+        url = f"{BASE_URL}/dokumentynieruchomosci/dokumenty/{document_id}/zalaczniki/"
+        params = {"id_a_do": self.id_a_do, "page_size": 100}
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        zalaczniki = response.json().get("results", [])
+        for i, zal in enumerate(zalaczniki):
+            base_url = f"{BASE_URL}/dokumentynieruchomosci/dokumenty/{document_id}/zalaczniki/{zal['id']}/"
+            download_url = f"{base_url}?id_a_do={self.id_a_do}&pageSize=1000&removed=False"
+            name = sanitize_filename(zal["name"]) + f"{i}." + zal["extension"]
+            download_file(
+                download_url, f"{folder_directory.as_posix()}/{name}", headers=self.headers
+            )
+        return response.json()
+    

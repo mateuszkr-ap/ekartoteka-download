@@ -30,7 +30,7 @@ def save_json(data: dict, filename: str) -> None:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def uchwaly_to_csv(uchwaly: dict, filename: str) -> None:
+def json_to_csv(uchwaly: dict, filename: str) -> None:
     """Convert uchwały data to a CSV file."""
     df = pd.DataFrame(uchwaly)
     df.to_csv(filename, index=False, encoding="utf-8", sep=";")
