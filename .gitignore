@@ -6,7 +6,12 @@ dist/
 wheels/
 *.egg-info
 src/files/
+files/
 
 # Virtual environments
 .venv
 .DS_Store
+
+
+token.txt
+secrets.json

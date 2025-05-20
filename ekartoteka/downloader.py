@@ -1,4 +1,5 @@
 import requests
+import json
 import unicodedata
 
 def download_file(url: str, destination: str, headers) -> None:
@@ -13,3 +14,8 @@ def download_file(url: str, destination: str, headers) -> None:
 def sanitize_filename(filename: str) -> str:
     """Sanitize the filename to ensure it is valid for the filesystem."""
     return unicodedata.normalize("NFKD",filename).replace(" ", "_").replace(":", "_").replace("/", "_")
+
+def save_json(data: dict, filename: str) -> None:
+    """Save JSON data to a file."""
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
